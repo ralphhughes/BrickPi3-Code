@@ -6,6 +6,11 @@ import brickpi3
 # Global
 BP = brickpi3.BrickPi3()
 
+# Constants
+MAX_WHEEL_SPEED = 160 # RPM
+NUM_STEPS_SPEED = 10  # Number of keypresses between stopped and max_wheel_speed
+NUM_STEPS_TURN = 10 # Number of keypresses between straight ahead and full left or right
+
 def steering(x, y):
     # convert to polar
     r = math.hypot(x, y)
@@ -28,11 +33,16 @@ def steering(x, y):
 
     return left, right
 
+def center_text(text, scr_width):
+    start_x = int((scr_width // 2) - (len(text) // 2) - len(text) % 2)
+    if start_x < 0:
+        start_x = 0
+    return start_x
 
 def draw_menu(stdscr):
     k = 0
-    cursor_x = 0
-    cursor_y = 0
+    current_turn = 0
+    current_speed = 0
 
     # Clear and refresh the screen for a blank canvas
     stdscr.clear()
@@ -53,54 +63,52 @@ def draw_menu(stdscr):
         height, width = stdscr.getmaxyx()
 
         if k == curses.KEY_DOWN:
-            cursor_y = cursor_y - .1
+            current_speed = current_speed - (1 / NUM_STEPS_SPEED)
         elif k == curses.KEY_UP:
-            cursor_y = cursor_y + .1
+            current_speed = current_speed + (1 / NUM_STEPS_SPEED)
         elif k == curses.KEY_RIGHT:
-            cursor_x = cursor_x + .1
+            current_turn = current_turn - (1 / NUM_STEPS_TURN)
         elif k == curses.KEY_LEFT:
-            cursor_x = cursor_x - .1
+            current_turn = current_turn + (1 / NUM_STEPS_TURN)
+        elif k == 32: # Spacebar
+            current_turn = 0
+            current_speed = 0
 
         # Clamp cursorx,y to range of (-1 to +1)
-        cursor_x = max(-1, cursor_x)
-        cursor_x = min(1, cursor_x)
-        cursor_y = max(-1, cursor_y)
-        cursor_y = min(1, cursor_y)
+        current_turn = max(-1, current_turn)
+        current_turn = min(1, current_turn)
+        current_speed = max(-1, current_speed)
+        current_speed = min(1, current_speed)
 
-        left_motor, right_motor = steering(cursor_y, cursor_x)
-        left_motor_dps = 960 * left_motor
-        right_motor_dps = 960 * right_motor
+        left_motor, right_motor = steering(current_speed, current_turn)
+        left_motor_dps = MAX_WHEEL_SPEED * 6 * left_motor
+        right_motor_dps = MAX_WHEEL_SPEED * 6 * right_motor
 
 
         # Declaration of strings
-        title = "Motor Controller using keyboard"[:width-1]
-        subtitle = "Attach servomotors to BrickPi3 ports A and D, use arrow keys to control them"[:width-1]
-        keystr = "Last key pressed: {}".format(k)[:width-1]
-        statusbarstr = "Press 'q' to exit | STATUS BAR | Speed: {:.1f}, Turn: {:.1f}, LeftMotor: {:.1f}, RightMotor: {:.1f}".format(cursor_y, cursor_x, left_motor_dps, right_motor_dps)
-        if k == 0:
-            keystr = "No key press detected..."[:width-1]
+        title = "Motor Controller"[:width-1]
+        subtitle = "PortA: Left Servomotor, PortD: Right Servomotor"[:width-1]
+        keystr = "Speed: {}%, Turn: {}%, LeftMotor: {:.1f}, RightMotor: {:.1f}".format(round(current_speed * 100, 0), round(current_turn * 100, 0), left_motor_dps, right_motor_dps)
+        statusbarstr = "Battery Voltage: {:.3f}".format(BP.get_voltage_battery())
+        #if k == 0:
+        #    keystr = "No key press detected..."[:width-1]
 
-        if abs(round(left_motor,1)) > 0.05:
+        if abs(round(left_motor,1)) >= (1 / NUM_STEPS_SPEED):
             BP.set_motor_dps(BP.PORT_A, left_motor_dps)
         else:
-            keystr=keystr + "left stopped"
-            BP.set_motor_power(BP.PORT_A, -128)
+            BP.set_motor_power(BP.PORT_A, 0)
 
-        if abs(round(right_motor,1)) > 0.05:
+        if abs(round(right_motor,1)) >= (1 / NUM_STEPS_SPEED):
             BP.set_motor_dps(BP.PORT_D, right_motor_dps)
         else:
-            keystr = keystr + "right stopped"
-            BP.set_motor_power(BP.PORT_D, -128)
+            BP.set_motor_power(BP.PORT_D, 0)
 
         # Centering calculations
-        start_x_title = int((width // 2) - (len(title) // 2) - len(title) % 2)
-        start_x_subtitle = int((width // 2) - (len(subtitle) // 2) - len(subtitle) % 2)
-        start_x_keystr = int((width // 2) - (len(keystr) // 2) - len(keystr) % 2)
-        start_y = int((height // 2) - 2)
+        start_x_title = center_text(title, width)
+        start_x_subtitle = center_text(subtitle, width)
+        start_x_keystr = center_text(keystr, width)
+        start_y = 0
 
-        # Rendering some text
-        whstr = "Width: {}, Height: {}".format(width, height)
-        stdscr.addstr(0, 0, whstr, curses.color_pair(1))
 
         # Render status bar
         stdscr.attron(curses.color_pair(3))
@@ -123,6 +131,8 @@ def draw_menu(stdscr):
         stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
         stdscr.addstr(start_y + 3, (width // 2) - 2, '-' * 4)
         stdscr.addstr(start_y + 5, start_x_keystr, keystr)
+
+
 
         # Refresh the screen
         stdscr.refresh()
