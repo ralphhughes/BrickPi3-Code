@@ -2,11 +2,12 @@
 # To change this template file, choose Tools | Templates
 # and open the template in the editor.
 
-# import brickpi3
+import brickpi3
 import math
+import time
 
 # Global
-#BP = brickpi3.BrickPi3()
+BP = brickpi3.BrickPi3()
 
 # Constants
 WHEEL_DIAMETER = 8.2 # CM
@@ -14,17 +15,22 @@ GEAR_RATIO = 12 / 20  # 12t:20t
 
 def move_distance(distance):
     try:
+        print("Moving {} cm...".format(distance))
         wheel_circumference = math.pi * WHEEL_DIAMETER
         num_wheel_revolutions = distance / wheel_circumference
+        print("Wheel revolutions: {}".format(num_wheel_revolutions))
+
         num_motor_revolutions = num_wheel_revolutions / GEAR_RATIO
         motor_degrees = 360 * num_motor_revolutions
-        
-        BP.set_motor_position_relative(BP.PORT_A & BP.PORT_D, motor_degrees)
-        
+        print("Motor degrees: {}".format(motor_degrees))
+        BP.set_motor_position_relative(BP.PORT_B, motor_degrees)
+        time.sleep(5)
+        BP.set_motor_power(BP.PORT_B, -128)
     except KeyboardInterrupt:
-        #BP.reset_all()
+        BP.reset_all()
         print ("Bye")
 
 if __name__ == "__main__":
+    BP.set_motor_limits(BP.PORT_B, 50)
     required_distance = int(input("Enter number of centimeters to move: "))
     move_distance(required_distance)
