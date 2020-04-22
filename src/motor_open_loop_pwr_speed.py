@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# I used the output from this, copied into a spreadsheet and charted to see if the 
+# power-unloaded rpm has alinear relationship or not.
+
 import time
 import brickpi3
 
