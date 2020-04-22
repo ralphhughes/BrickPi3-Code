@@ -15,12 +15,17 @@ echo = [Echo(TRIGGER_PIN_1, ECHO_PIN_1)
 
 def main():
     sleep(0.1)
-    for counter in range(1, 6):
-        result1 = echo[0].read('cm', 3)
-        result2 = echo[1].read('cm', 3)
-        print('C1: {}cm\tC2: {}cm'.format(round(result2,2), round(result1,2)))
+    try:
+        while True:
 
-    echo[0].stop()
+            result1 = echo[0].read('cm', 3)
+            result2 = echo[1].read('cm', 3)
+            print('C1: {}cm\tC2: {}cm'.format(round(result2,1), round(result1,1)))
+
+        
+    except KeyboardInterrupt:
+        echo[0].stop()
+        print("Measurement stopped by User")
 
 if __name__ == '__main__':
     main()
