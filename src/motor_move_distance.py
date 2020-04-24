@@ -19,13 +19,10 @@ RIGHT_MOTOR = BP.PORT_C
 
 
 def distance_to_motor_degrees(distance):
-    # print("Moving {} cm...".format(distance))
     wheel_circumference = math.pi * WHEEL_DIAMETER
     num_wheel_revolutions = distance / wheel_circumference
-    # print("Wheel revolutions: {}".format(num_wheel_revolutions))
     num_motor_revolutions = num_wheel_revolutions / GEAR_RATIO
     motor_degrees = 360 * num_motor_revolutions
-    # print("Motor degrees: {}".format(motor_degrees))
     return motor_degrees
     
     
@@ -40,8 +37,8 @@ def turn_right(angle):
     fraction_of_circle = angle / 360
     required_distance = fraction_of_circle * (math.pi * WHEEL_TRACK_WIDTH)
     motor_degrees = distance_to_motor_degrees(required_distance)
-    BP.set_motor_power(LEFT_MOTOR, motor_degrees)
-    BP.set_motor_position_relative(RIGHT_MOTOR, 0)
+    BP.set_motor_position_relative(LEFT_MOTOR, motor_degrees)
+    BP.set_motor_power(RIGHT_MOTOR, 0)
 
 def move_forward(distance):
     motor_degrees = distance_to_motor_degrees(distance)
@@ -75,6 +72,7 @@ if __name__ == "__main__":
         wait_for_motors_to_stop()
         move_backward(required_distance)
         wait_for_motors_to_stop()
+        BP.reset_all()
     except KeyboardInterrupt:
         BP.reset_all()
         print ("Bye")
