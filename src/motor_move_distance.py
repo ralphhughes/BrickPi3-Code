@@ -54,13 +54,12 @@ def move_backward(distance):
     BP.set_motor_position_relative(RIGHT_MOTOR, -motor_degrees)
 
 def wait_for_motors_to_stop():
-    both_stopped = false
-    while (not both_stopped):
-        time.sleep(0.1)
+    while True:
+        time.sleep(0.25)
         left_motor_dps = BP.get_motor_status(LEFT_MOTOR)[3]
         right_motor_dps = BP.get_motor_status(RIGHT_MOTOR)[3]
         if (left_motor_dps < 1 and right_motor_dps < 1):
-            both_stopped = true
+            break
         
         
 if __name__ == "__main__":
