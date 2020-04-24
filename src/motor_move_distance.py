@@ -31,6 +31,6 @@ def move_distance(distance):
         print ("Bye")
 
 if __name__ == "__main__":
-    BP.set_motor_limits(BP.PORT_B, 50)
+    BP.set_motor_limits(BP.PORT_B, 0, 600)
     required_distance = int(input("Enter number of centimeters to move: "))
     move_distance(required_distance)
