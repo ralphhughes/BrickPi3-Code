@@ -24,13 +24,16 @@ def move_distance(distance):
         motor_degrees = 360 * num_motor_revolutions
         print("Motor degrees: {}".format(motor_degrees))
         BP.set_motor_position_relative(BP.PORT_B, motor_degrees)
+        BP.set_motor_position_relative(BP.PORT_C, motor_degrees)
         time.sleep(5)
         BP.set_motor_power(BP.PORT_B, -128)
+        BP.set_motor_power(BP.PORT_C, -128)
     except KeyboardInterrupt:
         BP.reset_all()
         print ("Bye")
 
 if __name__ == "__main__":
     BP.set_motor_limits(BP.PORT_B, 50)
-    required_distance = int(input("Enter number of centimeters to move: "))
+    BP.set_motor_limits(BP.PORT_C, 50)
+    required_distance = float(input("Enter number of centimeters to move: "))
     move_distance(required_distance)
