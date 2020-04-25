@@ -50,14 +50,24 @@ def move_backward(distance):
     BP.set_motor_position_relative(LEFT_MOTOR, -motor_degrees)
     BP.set_motor_position_relative(RIGHT_MOTOR, -motor_degrees)
 
+#def wait_for_motors_to_stop_old():
+#    while True:
+#        time.sleep(0.25)
+#        left_motor_dps = BP.get_motor_status(LEFT_MOTOR)[3]
+#        right_motor_dps = BP.get_motor_status(RIGHT_MOTOR)[3]
+#        if (left_motor_dps < 1 and right_motor_dps < 1):
+#            break
+
 def wait_for_motors_to_stop():
-    while True:
-        time.sleep(0.25)
-        left_motor_dps = BP.get_motor_status(LEFT_MOTOR)[3]
-        right_motor_dps = BP.get_motor_status(RIGHT_MOTOR)[3]
-        if (left_motor_dps < 1 and right_motor_dps < 1):
-            break
-        
+    # wait for either motor to start running
+    while ((BP.get_motor_status(LEFT_MOTOR)[3] == 0) and 
+                (BP.get_motor_status(RIGHT_MOTOR)[3] == 0) ):
+        time.sleep(0.05)
+
+    # wait for both motors to be stopped
+    while ((BP.get_motor_status(LEFT_MOTOR)[3] != 0) and 
+                (BP.get_motor_status(RIGHT_MOTOR)[3] != 0) ):
+        time.sleep(0.5)
         
 if __name__ == "__main__":
     BP.set_motor_limits(BP.PORT_B, 40, 600)
