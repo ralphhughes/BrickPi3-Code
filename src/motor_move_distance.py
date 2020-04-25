@@ -59,29 +59,46 @@ def move_backward(distance):
 #            break
 
 def wait_for_motors_to_stop():
+    count = 0
+    print("  Waiting for motor to start...")
     # wait for either motor to start running
     while ((BP.get_motor_status(LEFT_MOTOR)[3] == 0) and 
                 (BP.get_motor_status(RIGHT_MOTOR)[3] == 0) ):
         time.sleep(0.05)
-
+        count += 1
+    print("  Done: {}".format(count))
+    count = 0
+    
+    print("  Waiting for motor to stop...")
     # wait for both motors to be stopped
     while ((BP.get_motor_status(LEFT_MOTOR)[3] != 0) and 
                 (BP.get_motor_status(RIGHT_MOTOR)[3] != 0) ):
-        time.sleep(0.5)
-        
+        time.sleep(0.25)
+        count += 1
+    print("  Done: {}".format(count))
+    
 if __name__ == "__main__":
     BP.set_motor_limits(BP.PORT_B, 40, 600)
     BP.set_motor_limits(BP.PORT_C, 40, 600)
     required_distance = float(input("Enter number of centimeters to move: "))
     try:
+        print("Move forward")
         move_forward(required_distance)
         wait_for_motors_to_stop()
-        turn_left(30)
+        
+        print("Turn left")
+        turn_left(45)
         wait_for_motors_to_stop()
-        turn_right(30)
+        
+        print("Turn right")
+        turn_right(45)
         wait_for_motors_to_stop()
+        
+        print("Move backwards")
         move_backward(required_distance)
         wait_for_motors_to_stop()
+        
+        print("Reset")
         BP.reset_all()
     except KeyboardInterrupt:
         BP.reset_all()
