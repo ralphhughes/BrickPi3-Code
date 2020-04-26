@@ -23,22 +23,23 @@ def distance_to_motor_degrees(distance):
     num_wheel_revolutions = distance / wheel_circumference
     num_motor_revolutions = num_wheel_revolutions / GEAR_RATIO
     motor_degrees = 360 * num_motor_revolutions
+    print("    motor_degrees: {}".format(motor_degrees))
     return motor_degrees
     
     
 def turn_left(angle):
     fraction_of_circle = angle / 360
-    required_distance = fraction_of_circle * (math.pi * WHEEL_TRACK_WIDTH)
+    required_distance = fraction_of_circle * (math.pi * 2 * WHEEL_TRACK_WIDTH)
     motor_degrees = distance_to_motor_degrees(required_distance)
-    BP.set_motor_power(LEFT_MOTOR, 0)
+    BP.set_motor_position_relative(LEFT_MOTOR, 0)
     BP.set_motor_position_relative(RIGHT_MOTOR, motor_degrees)
     
 def turn_right(angle):
     fraction_of_circle = angle / 360
-    required_distance = fraction_of_circle * (math.pi * WHEEL_TRACK_WIDTH)
+    required_distance = fraction_of_circle * (math.pi * 2 * WHEEL_TRACK_WIDTH)
     motor_degrees = distance_to_motor_degrees(required_distance)
     BP.set_motor_position_relative(LEFT_MOTOR, motor_degrees)
-    BP.set_motor_power(RIGHT_MOTOR, 0)
+    BP.set_motor_position_relative(RIGHT_MOTOR, 0)
 
 def move_forward(distance):
     motor_degrees = distance_to_motor_degrees(distance)
@@ -58,24 +59,27 @@ def move_backward(distance):
 #        if (left_motor_dps < 1 and right_motor_dps < 1):
 #            break
 
-def wait_for_motors_to_stop():
-    count = 0
-    print("  Waiting for motor to start...")
-    # wait for either motor to start running
-    while ((BP.get_motor_status(LEFT_MOTOR)[3] == 0) and 
-                (BP.get_motor_status(RIGHT_MOTOR)[3] == 0) ):
-        time.sleep(0.05)
-        count += 1
-    print("  Done: {}".format(count))
-    count = 0
-    
-    print("  Waiting for motor to stop...")
-    # wait for both motors to be stopped
-    while ((BP.get_motor_status(LEFT_MOTOR)[3] != 0) and 
-                (BP.get_motor_status(RIGHT_MOTOR)[3] != 0) ):
-        time.sleep(0.25)
-        count += 1
-    print("  Done: {}".format(count))
+def moving():
+  return (BP.get_motor_status(LEFT_MOTOR)[3] != 0) or (BP.get_motor_status(RIGHT_MOTOR)[3] != 0)
+
+#def wait_for_motors_to_stop():
+#    count = 0
+#    print("  Waiting for motor to start...")
+#    # wait for either motor to start running
+#    while ((BP.get_motor_status(LEFT_MOTOR)[3] == 0) and 
+#                (BP.get_motor_status(RIGHT_MOTOR)[3] == 0) ):
+#        time.sleep(0.05)
+#        count += 1
+#    print("  Done: {}".format(count))
+#    count = 0
+#    
+#    print("  Waiting for motor to stop...")
+#    # wait for both motors to be stopped
+#    while ((BP.get_motor_status(LEFT_MOTOR)[3] != 0) and 
+#                (BP.get_motor_status(RIGHT_MOTOR)[3] != 0) ):
+#        time.sleep(0.25)
+#        count += 1
+#    print("  Done: {}".format(count))
     
 if __name__ == "__main__":
     BP.set_motor_limits(BP.PORT_B, 40, 600)
@@ -84,20 +88,24 @@ if __name__ == "__main__":
     try:
         print("Move forward")
         move_forward(required_distance)
-        wait_for_motors_to_stop()
-        
+        while not moving(): time.sleep(0.05)
+        while moving(): time.sleep(0.1)
+
         print("Turn left")
         turn_left(45)
-        wait_for_motors_to_stop()
-        
+        while not moving(): time.sleep(0.05)
+        while moving(): time.sleep(0.1)
+
         print("Turn right")
         turn_right(45)
-        wait_for_motors_to_stop()
-        
+        while not moving(): time.sleep(0.05)
+        while moving(): time.sleep(0.1)
+
         print("Move backwards")
         move_backward(required_distance)
-        wait_for_motors_to_stop()
-        
+        while not moving(): time.sleep(0.05)
+        while moving(): time.sleep(0.1)
+
         print("Reset")
         BP.reset_all()
     except KeyboardInterrupt:
