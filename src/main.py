@@ -3,8 +3,11 @@
 # Requires SSH public\private key pair to have been setup and working ok
 import inspect
 import os
+import sys
+import subprocess
 from os import path, popen
 from subprocess import Popen, PIPE
+
 
 FILE_TO_UPLOAD = "motor_move_distance.py"
 REMOTE_FOLDER = "/home/pi/BrickPi3-Code/src"
@@ -37,8 +40,10 @@ def main():
     
     
     print("Running the new remote file: " + REMOTE_FOLDER + "/" + FILE_TO_UPLOAD)
-#    shell('plink -ssh rpi-robot2 "cd ' + REMOTE_FOLDER + '; python3 ' + FILE_TO_UPLOAD + '"')
-    os.system('start /wait plink -ssh rpi-robot2 "cd ' + REMOTE_FOLDER + '; python3 ' + FILE_TO_UPLOAD + '"')   
+    sshCmd = 'start plink -ssh rpi-robot2 "cd ' + REMOTE_FOLDER + '; python3 ' + FILE_TO_UPLOAD + '"'
+#    shell(sshCmd)
+#    os.system('start /wait ' + sshCmd)  
+    subprocess.Popen(sshCmd, shell=True)
     print ("Done.")
         
     
