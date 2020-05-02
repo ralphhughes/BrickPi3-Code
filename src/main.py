@@ -9,9 +9,9 @@ import os
 from os import popen
 from subprocess import Popen
 from subprocess import PIPE
+import tempfile
 
-
-#FILE_TO_UPLOAD = "test_main.py"
+FILE_TO_RUN = "src/test_main.py"
 REMOTE_FOLDER = "/home/pi/BrickPi3-Code/"
 PUTTY_SAVED_SESSION = "rpi-robot2"
 
@@ -28,13 +28,8 @@ def shell(args, input=''):
     stdout, stderr = p.communicate(input=input)
     return stdout, stderr
 
-def main():
-    #thisScript = os.path.realpath(__file__)
-    #print("Running " + thisScript)
-    
+def deploy():
     folderContainingMe = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    #print("From folder: " + folderContainingMe)
-    
     
     print("Recursively copying this local folder:")
     print(folderContainingMe)
@@ -45,14 +40,21 @@ def main():
     print("DEBUG: " + cmd)
     print(popen(cmd).read())
     
+def remote_run():
+    remoteFile = REMOTE_FOLDER + FILE_TO_RUN
+    print("Running the new remote file: " + remoteFile)
     
-    #print("Running the new remote file: " + REMOTE_FOLDER + "/" + FILE_TO_UPLOAD)
-    #sshCmd = 'start plink -ssh rpi-robot2 "cd ' + REMOTE_FOLDER + '; python3 ' + FILE_TO_UPLOAD + '"'
-#    shell(sshCmd)
-#    os.system('start /wait ' + sshCmd)  
-    #subprocess.Popen(sshCmd, shell=True)
-    #print ("Done.")
-        
+    #tempFile = tempfile.gettempdir() + os.path.sep + "putty_cmd.txt" # Not using .TemporaryFile() as I want to view it after program has completed
+    #f= open(tempFile,"w+")
+    #f.write("python3 " + remoteFile)
+    #f.close()
+    #sshCmd = "start putty -load rpi-robot2 -m " + tempFile
+
+    sshCmd = 'start plink -ssh rpi-robot2 -t "python3 ' + remoteFile + '"'
+    print("DEBUG: " + sshCmd)
+    print(popen(sshCmd).read())
+    
     
 if __name__ == "__main__":
-    main()
+    deploy()
+    remote_run()
