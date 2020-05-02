@@ -1,13 +1,16 @@
-# To change this license header, choose License Headers in Project Properties.
-# To change this template file, choose Tools | Templates
-# and open the template in the editor.
+# Standalone test for using BrickPi to move\rotate a certain distance\angle
 
-import brickpi3
 import math
 import time
+import platform
+if platform.system() == 'Windows':
+    from lib import brickpi3_mock
+    BP = brickpi3_mock.BrickPi3()
+elif platform.system() == 'Linux':
+    import brickpi3
+    BP = brickpi3.BrickPi3()
 
-# Global
-BP = brickpi3.BrickPi3()
+
 
 # Constants
 WHEEL_DIAMETER = 8.2 # CM
