@@ -39,39 +39,49 @@ class Movement():
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self.distance_to_motor_degrees(required_distance)
-        self.BP.set_motor_position_relative(LEFT_MOTOR, motor_degrees)
-        self.BP.set_motor_position_relative(RIGHT_MOTOR, -motor_degrees)
+        self.BP.set_motor_position_relative(self.LEFT_MOTOR, motor_degrees)
+        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, -motor_degrees)
 
     def turn_left(self, angle):
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * 2 * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self.distance_to_motor_degrees(required_distance)
-        self.BP.set_motor_position_relative(LEFT_MOTOR, 0)
-        self.BP.set_motor_position_relative(RIGHT_MOTOR, motor_degrees)
+        self.BP.set_motor_position_relative(self.LEFT_MOTOR, 0)
+        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
 
     def turn_right(self, angle):
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * 2 * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self.distance_to_motor_degrees(required_distance)
-        self.BP.set_motor_position_relative(LEFT_MOTOR, motor_degrees)
-        self.BP.set_motor_position_relative(RIGHT_MOTOR, 0)
+        self.BP.set_motor_position_relative(self.LEFT_MOTOR, motor_degrees)
+        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, 0)
 
     def move_forward(self, distance):
         motor_degrees = self.distance_to_motor_degrees(distance)
-        self.BP.set_motor_position_relative(LEFT_MOTOR, motor_degrees)
-        self.BP.set_motor_position_relative(RIGHT_MOTOR, motor_degrees)
+        self.BP.set_motor_position_relative(self.LEFT_MOTOR, motor_degrees)
+        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
 
     def move_backward(self, distance):
         motor_degrees = self.distance_to_motor_degrees(distance)
-        self.BP.set_motor_position_relative(LEFT_MOTOR, -motor_degrees)
-        self.BP.set_motor_position_relative(RIGHT_MOTOR, -motor_degrees)
+        self.BP.set_motor_position_relative(self.LEFT_MOTOR, -motor_degrees)
+        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, -motor_degrees)
 
     def wait_for_motors_to_stop(self):
-        while not self.is_moving(): time.sleep(0.05)
-        while self.is_moving(): time.sleep(0.1)
+        timeout_time_start = time.time() + 0.5
+        while not self.is_moving(): 
+            time.sleep(0.05)
+            if time.time() > timeout_time_start:
+                print("WARN: Timeout waiting for motors to start")
+                break
+        timeout_time_stop = time.time() + 10        
+        while self.is_moving(): 
+            time.sleep(0.1)
+            if time.time() > timeout_time_stop:
+                print("WARN: Timeout waiting for motors to stop")
+                break
 
     def is_moving(self):
-      return (self.BP.get_motor_status(LEFT_MOTOR)[3] != 0) or (self.BP.get_motor_status(RIGHT_MOTOR)[3] != 0)
+      return (self.BP.get_motor_status(self.LEFT_MOTOR)[3] != 0) or (self.BP.get_motor_status(self.RIGHT_MOTOR)[3] != 0)
 
     
 if __name__ == "__main__":

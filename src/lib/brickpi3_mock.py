@@ -444,7 +444,7 @@ class BrickPi3(object):
             encoder -- The encoder position
             dps -- The current speed in Degrees Per Second
         """
-        return False
+        return [0,0,0,0]
 
     def get_motor_encoder(self, port):
         """
