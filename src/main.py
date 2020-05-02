@@ -3,14 +3,16 @@
 # Requires SSH public\private key pair to have been setup and working ok
 import inspect
 import os
-import sys
-import subprocess
-from os import path, popen
-from subprocess import Popen, PIPE
+#import sys
+#import subprocess
+#from os import path
+from os import popen
+from subprocess import Popen
+from subprocess import PIPE
 
 
-FILE_TO_UPLOAD = "test_main.py"
-REMOTE_FOLDER = "/home/pi/BrickPi3-Code/src"
+#FILE_TO_UPLOAD = "test_main.py"
+REMOTE_FOLDER = "/home/pi/BrickPi3-Code/"
 PUTTY_SAVED_SESSION = "rpi-robot2"
 
 ## shell out, prompt
@@ -27,15 +29,20 @@ def shell(args, input=''):
     return stdout, stderr
 
 def main():
-    thisScript = os.path.realpath(__file__)
-    print("Running " + thisScript)
+    #thisScript = os.path.realpath(__file__)
+    #print("Running " + thisScript)
     
     folderContainingMe = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-    print("From folder: " + folderContainingMe)
+    #print("From folder: " + folderContainingMe)
     
-    localFile = folderContainingMe + os.path.sep + FILE_TO_UPLOAD
-    print("To upload and run this file: " + localFile)
-    cmd = 'pscp "%s" %s:%s' % (FILE_TO_UPLOAD, PUTTY_SAVED_SESSION, REMOTE_FOLDER)
+    
+    print("Recursively copying this local folder:")
+    print(folderContainingMe)
+    print("to the remote folder:")
+    print(REMOTE_FOLDER)
+    print("via SCP, overwriting anything in remote folder.")
+    cmd = 'pscp -r -p "%s" %s:%s' % (folderContainingMe, PUTTY_SAVED_SESSION, REMOTE_FOLDER)
+    print("DEBUG: " + cmd)
     print(popen(cmd).read())
     
     
