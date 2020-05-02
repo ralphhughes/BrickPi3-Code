@@ -32,15 +32,15 @@ class Movement():
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self.distance_to_motor_degrees(required_distance)
-        self.BP.set_motor_position_relative(self.LEFT_MOTOR, -motor_degrees)
-        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
+        self.BP.set_motor_position_relative(self.LEFT_MOTOR, motor_degrees)
+        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, -motor_degrees)
 
     def rotate_right(self, angle):
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self.distance_to_motor_degrees(required_distance)
-        self.BP.set_motor_position_relative(self.LEFT_MOTOR, motor_degrees)
-        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, -motor_degrees)
+        self.BP.set_motor_position_relative(self.LEFT_MOTOR, -motor_degrees)
+        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
 
     def turn_left(self, angle):
         fraction_of_circle = angle / 360

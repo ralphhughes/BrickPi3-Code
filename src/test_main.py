@@ -30,33 +30,42 @@ def main():
         BP.set_motor_limits(BP.PORT_B, 45, 900)
         BP.set_motor_limits(BP.PORT_C, 45, 900)
         
-        BP.set_motor_dps(BP.PORT_B, 400)
-        BP.set_motor_dps(BP.PORT_B, 400)
+        #BP.set_motor_dps(BP.PORT_B, 200)
+        #BP.set_motor_dps(BP.PORT_B, 200)
         while True:
 
             left_distance = echo[0].read('cm', 3)
-            sleep(0.029) # 29 ms
             right_distance = echo[1].read('cm', 3)
-            sleep(0.029) # 29 ms
-            print('left: {}cm\tright: {}cm'.format(round(left_distance,1), round(right_distance,1)))
+            print('left: {}cm\tright: {}cm'.format(round(left_distance,0), round(right_distance,0)))
 
-            if (left_distance > 5 and left_distance < 20):
-                if (right_distance > 5 and right_distance < 20):
-                    M.stop_both()
-                    break
-                    
-            if (left_distance > 5 and left_distance < 20):
+            # 0 for out of range?
+            
+            action = 'forward'
+            
+            if left_distance < 20 and left_distance > 0:
+                action='right'
+            
+            if right_distance < 20 and right_distance > 0:
+                action='left'
+            
+            print(action)
+            
+            if action == 'forward':
+                M.move_forward(10)
+                M.wait_for_motors_to_stop()
+            elif action == 'right':
                 M.rotate_right(90)
                 M.wait_for_motors_to_stop()
-                
-            if (right_distance > 5 and right_distance < 20):
+            elif action == 'left':
                 M.rotate_left(90)
                 M.wait_for_motors_to_stop()
                 
     except KeyboardInterrupt:
         echo[0].stop()
+        echo[1].stop()
+        print("Both sonars stopped")
         BP.reset_all()
-        print("Measurement stopped by User")
+        print("Both motors stopped")
 
 if __name__ == '__main__':
     main()

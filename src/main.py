@@ -39,12 +39,12 @@ def main():
     print(popen(cmd).read())
     
     
-    print("Running the new remote file: " + REMOTE_FOLDER + "/" + FILE_TO_UPLOAD)
-    sshCmd = 'start plink -ssh rpi-robot2 "cd ' + REMOTE_FOLDER + '; python3 ' + FILE_TO_UPLOAD + '"'
+    #print("Running the new remote file: " + REMOTE_FOLDER + "/" + FILE_TO_UPLOAD)
+    #sshCmd = 'start plink -ssh rpi-robot2 "cd ' + REMOTE_FOLDER + '; python3 ' + FILE_TO_UPLOAD + '"'
 #    shell(sshCmd)
 #    os.system('start /wait ' + sshCmd)  
-    subprocess.Popen(sshCmd, shell=True)
-    print ("Done.")
+    #subprocess.Popen(sshCmd, shell=True)
+    #print ("Done.")
         
     
 if __name__ == "__main__":
