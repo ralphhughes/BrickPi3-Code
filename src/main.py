@@ -9,7 +9,7 @@ from os import path, popen
 from subprocess import Popen, PIPE
 
 
-FILE_TO_UPLOAD = "motor_move_distance.py"
+FILE_TO_UPLOAD = "test_main.py"
 REMOTE_FOLDER = "/home/pi/BrickPi3-Code/src"
 PUTTY_SAVED_SESSION = "rpi-robot2"
 

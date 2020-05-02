@@ -14,7 +14,7 @@ class Movement():
     BP = None
     
     def __init__(self, BP):
-        print("class init")
+        # print("class init")
         self.LEFT_MOTOR = BP.PORT_B
         self.RIGHT_MOTOR = BP.PORT_C
         self.BP = BP
@@ -25,7 +25,7 @@ class Movement():
         num_wheel_revolutions = distance / wheel_circumference
         num_motor_revolutions = num_wheel_revolutions / self.GEAR_RATIO
         motor_degrees = 360 * num_motor_revolutions
-        print("    motor_degrees: {}".format(motor_degrees))
+        # print("    motor_degrees: {}".format(motor_degrees))
         return motor_degrees
 
     def rotate_left(self, angle):
@@ -66,6 +66,10 @@ class Movement():
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, -motor_degrees)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, -motor_degrees)
 
+    def stop_both(self):
+        self.BP.set_motor_position_relative(self.LEFT_MOTOR, 0)
+        self.BP.set_motor_position_relative(self.RIGHT_MOTOR, 0)
+        
     def wait_for_motors_to_stop(self):
         timeout_time_start = time.time() + 0.5
         while not self.is_moving(): 
