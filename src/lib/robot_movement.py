@@ -13,10 +13,10 @@ class Movement():
     RIGHT_MOTOR = None
     BP = None
     
-    def __init__(self, BP):
+    def __init__(self, BP, left_motor, right_motor):
         # print("class init")
-        self.LEFT_MOTOR = BP.PORT_B
-        self.RIGHT_MOTOR = BP.PORT_C
+        self.LEFT_MOTOR = left_motor
+        self.RIGHT_MOTOR = right_motor
         self.BP = BP
         
         
