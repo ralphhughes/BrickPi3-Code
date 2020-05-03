@@ -5,7 +5,7 @@ import math
 import time
 
 class Movement():
-    # Constants
+    # Constants for current robot
     WHEEL_DIAMETER = 8.2 # CM
     GEAR_RATIO = 12 / 20  # 12t:20t
     WHEEL_TRACK_WIDTH = 15.00 # CM (nice round number, what are the chances!)
@@ -19,8 +19,26 @@ class Movement():
         self.RIGHT_MOTOR = right_motor
         self.BP = BP
         
-        
-    def distance_to_motor_degrees(self, distance):
+    # Sets motor speeds to drive in an un-ending circle with specified radius
+    # Note: radius is measured to the inner driving wheel, not the further out one.
+    def drive_in_circle(self, isRightHand, radius, speed):
+        # ratio(WheelSpeed1:WheelSpeed2) = ratio(CircleRadius:(CircleRadius+TrackWidth))
+        if radius == 0:
+            outer_wheel_speed = speed
+            inner_wheel_speed = 0
+        elif radius > 0:
+            fraction = radius / (radius + self.WHEEL_TRACK_WIDTH)
+            outer_wheel_speed = speed
+            inner_wheel_speed = outer_wheel_speed * fraction
+
+        if isRightHand:
+            self.BP.set_motor_dps(self.LEFT_MOTOR, outer_wheel_speed)
+            self.BP.set_motor_dps(self.RIGHT_MOTOR, inner_wheel_speed)
+        else:
+            self.BP.set_motor_dps(self.LEFT_MOTOR, inner_wheel_speed)
+            self.BP.set_motor_dps(self.RIGHT_MOTOR, outer_wheel_speed)
+
+    def _distance_to_motor_degrees(self, distance):
         wheel_circumference = math.pi * self.WHEEL_DIAMETER
         num_wheel_revolutions = distance / wheel_circumference
         num_motor_revolutions = num_wheel_revolutions / self.GEAR_RATIO
@@ -31,45 +49,47 @@ class Movement():
     def rotate_left(self, angle):
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * self.WHEEL_TRACK_WIDTH)
-        motor_degrees = self.distance_to_motor_degrees(required_distance)
+        motor_degrees = self._distance_to_motor_degrees(required_distance)
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, motor_degrees)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, -motor_degrees)
 
     def rotate_right(self, angle):
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * self.WHEEL_TRACK_WIDTH)
-        motor_degrees = self.distance_to_motor_degrees(required_distance)
+        motor_degrees = self._distance_to_motor_degrees(required_distance)
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, -motor_degrees)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
 
     def turn_left(self, angle):
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * 2 * self.WHEEL_TRACK_WIDTH)
-        motor_degrees = self.distance_to_motor_degrees(required_distance)
+        motor_degrees = self._distance_to_motor_degrees(required_distance)
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, 0)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
 
     def turn_right(self, angle):
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * 2 * self.WHEEL_TRACK_WIDTH)
-        motor_degrees = self.distance_to_motor_degrees(required_distance)
+        motor_degrees = self._distance_to_motor_degrees(required_distance)
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, motor_degrees)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, 0)
 
     def move_forward(self, distance):
-        motor_degrees = self.distance_to_motor_degrees(distance)
+        motor_degrees = self._distance_to_motor_degrees(distance)
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, motor_degrees)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
 
     def move_backward(self, distance):
-        motor_degrees = self.distance_to_motor_degrees(distance)
+        motor_degrees = self._distance_to_motor_degrees(distance)
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, -motor_degrees)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, -motor_degrees)
 
     def stop_both(self):
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, 0)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, 0)
-        
+
+    # Note: Includes timeouts, so only designed for use with turn_left\right
+    # or rotate_left\right functions.
     def wait_for_motors_to_stop(self):
         timeout_time_start = time.time() + 0.5
         while not self.is_moving(): 
