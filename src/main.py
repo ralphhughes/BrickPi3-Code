@@ -53,8 +53,12 @@ def remote_run():
     sshCmd = 'start plink -ssh rpi-robot2 -t "python3 ' + remoteFile + '"'
     print("DEBUG: " + sshCmd)
     print(popen(sshCmd).read())
-    
-    
+
+    sshCmd = 'plink -ssh rpi-robot2 "python3 ' + REMOTE_FOLDER + 'src/stop_motors.py"'
+    print("DEBUG: " + sshCmd)
+    print(popen(sshCmd).read())
+
+
 if __name__ == "__main__":
     deploy()
     remote_run()
