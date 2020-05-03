@@ -4,6 +4,10 @@
 import math
 import time
 
+
+"""
+Wrapper round brickpi3 class to provide higher level functions
+"""
 class Movement():
     # Constants for current robot
     WHEEL_DIAMETER = 8.2 # CM
@@ -19,10 +23,13 @@ class Movement():
         self.RIGHT_MOTOR = right_motor
         self.BP = BP
         
-    # Sets motor speeds to drive in an un-ending circle with specified radius
-    # Note: radius is measured to the inner driving wheel, not the further out one.
     def drive_in_circle(self, isRightHand, radius, speed):
-        # ratio(WheelSpeed1:WheelSpeed2) = ratio(CircleRadius:(CircleRadius+TrackWidth))
+        """
+        Sets motor speeds to drive in an un-ending circle with specified radius
+        Note: radius is measured to the inner driving wheel, not the further out one.
+        Note: ratio(WheelSpeed1:WheelSpeed2) = ratio(CircleRadius:(CircleRadius+TrackWidth))
+        """
+
         if radius == 0:
             outer_wheel_speed = speed
             inner_wheel_speed = 0
@@ -47,6 +54,10 @@ class Movement():
         return motor_degrees
 
     def rotate_left(self, angle):
+        """
+        Rotates the robot on the spot by the angle in degrees by rotating one
+        motor forward and the other backward by an equal amount.
+        """
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self._distance_to_motor_degrees(required_distance)
@@ -54,6 +65,10 @@ class Movement():
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, -motor_degrees)
 
     def rotate_right(self, angle):
+        """
+        Rotates the robot on the spot by the angle in degrees by rotating one
+        motor forward and the other backward by an equal amount.
+        """
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self._distance_to_motor_degrees(required_distance)
@@ -61,6 +76,10 @@ class Movement():
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
 
     def turn_left(self, angle):
+        """
+        Turns the robot by stopping one wheel and driving the wheel on the opposite side
+        by a certain amount.
+        """
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * 2 * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self._distance_to_motor_degrees(required_distance)
@@ -68,6 +87,10 @@ class Movement():
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, motor_degrees)
 
     def turn_right(self, angle):
+        """
+        Turns the robot by stopping one wheel and driving the wheel on the opposite side
+        by a certain amount.
+        """
         fraction_of_circle = angle / 360
         required_distance = fraction_of_circle * (math.pi * 2 * self.WHEEL_TRACK_WIDTH)
         motor_degrees = self._distance_to_motor_degrees(required_distance)
@@ -88,19 +111,26 @@ class Movement():
         self.BP.set_motor_position_relative(self.LEFT_MOTOR, 0)
         self.BP.set_motor_position_relative(self.RIGHT_MOTOR, 0)
 
-    # Note: Includes timeouts, so only designed for use with turn_left\right
-    # or rotate_left\right functions.
-    def wait_for_motors_to_stop(self):
-        timeout_time_start = time.time() + 0.5
+
+    def wait_for_motors_to_stop(self, timeout_seconds = 10):
+        """
+        This function pauses (time.sleep) until the motors have stopped moving. This
+        is useful for blocking execution until the motors have rotated to a specified
+        angle.
+
+        Note: Includes timeouts, so only designed for use with turn_left\right,
+        rotate_left\right functions, move_forward or move_backward functions.
+        """
+        timeout_time_to_start = time.time() + 0.5
         while not self.is_moving(): 
             time.sleep(0.05)
-            if time.time() > timeout_time_start:
+            if time.time() > timeout_time_to_start:
                 print("WARN: Timeout waiting for motors to start")
                 break
-        timeout_time_stop = time.time() + 10        
+        timeout_time_to_stop = time.time() + timeout_seconds
         while self.is_moving(): 
             time.sleep(0.1)
-            if time.time() > timeout_time_stop:
+            if time.time() > timeout_time_to_stop:
                 print("WARN: Timeout waiting for motors to stop")
                 break
 
