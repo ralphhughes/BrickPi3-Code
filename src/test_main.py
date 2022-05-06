@@ -14,7 +14,7 @@ elif platform.system() == 'Linux':
 LEFT_MOTOR = BP.PORT_B
 RIGHT_MOTOR = BP.PORT_C
 M = robot_movement.Movement(BP, LEFT_MOTOR, RIGHT_MOTOR)
-MOTORS_ENABLED = True
+MOTORS_ENABLED = False
 
 from Bluetin_Echo import Echo # https://github.com/MarkAHeywood/Bluetin_Python_Echo
 # Define pin constants
@@ -43,6 +43,7 @@ def safeQuit():
     os._exit(0)
 
 def main(name):
+    last_nxt_read_time = time.time()
     try:
         if MOTORS_ENABLED:
             BP.set_motor_limits(LEFT_MOTOR, 45)
@@ -50,11 +51,24 @@ def main(name):
             BP.set_motor_dps(LEFT_MOTOR, 200)
             BP.set_motor_dps(RIGHT_MOTOR, 200)
 
+        left_distance = 0
+        center_distance = 0
+        right_distance = 0
         while True:
-            left_distance = echo[0].read('cm')
-            right_distance = echo[1].read('cm')
+            if left_distance != 255:
+                left_distance = (left_distance + echo[0].read('cm')) / 2
+            else:
+                left_distance = echo[0].read('cm')
+
+            time.sleep(0.2)
+            if right_distance != 255:
+                right_distance = (right_distance + echo[1].read('cm')) / 2
+            else:
+                right_distance = echo[1].read('cm')
+
             try:
-                center_distance = BP.get_sensor(BP.PORT_1)
+                if (time.time() - last_nxt_read_time) > 0.2:
+                    center_distance = BP.get_sensor(BP.PORT_1)
             except brickpi3.SensorError:
                 print("ERROR: Can't read NXT ultrasonic sensor!")
                 center_distance = 256

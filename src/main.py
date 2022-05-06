@@ -11,7 +11,7 @@ from subprocess import Popen
 from subprocess import PIPE
 import tempfile
 
-FILE_TO_RUN = "src/motor_move_distance.py"
+FILE_TO_RUN = "src/test_main.py"
 REMOTE_FOLDER = "/home/pi/BrickPi3-Code/"
 PUTTY_SAVED_SESSION = "rpi-robot2"
 
