@@ -1,30 +1,16 @@
-# Hardcoded location
-latitude=0
-longitude=0
-
-# Prompt for target azimuth and inclination
-strTargetAzimuth = input("Enter compass bearing to target in degrees")
-
-strTargetElevation = input("Enter elevation to target in degrees")
-
-# Prompt for current azimuth
-strAzimuth = input("Please enter current azimuth? (leave blank for due north)")
-if not strAzimuth:
-    numAzimuth = 0
-else:
-    numAzimuth = float(strAzimuth)
-
-# Home the elevation axis using the limit switch
-# (run motor A in -ve encoder direction until touch sensor fires. Stop motor A and reset motor A encoder for zero position)
-
-# Calculate azimuth & inclination of sun right now for the given lat/long
-
-# Bisect the azimuth and inclination angle deltas to work out mirror azimuth and inclination
-
-# Debug: print everything I've been given or calculated
-print(f'Azimuth: {numAzimuth}')
 
 
-#Convert mirror azimuth to motor encoder counts using gear ratio and wheel size
+def print_menu():
+    print("1: Set current location (lat\long)")
+    print("2: Calibrate current azimuth\inclination")
+    print("3: Set target position")
+    print("4: manual move")
+    print("q: quit")
 
-#Instruct motors to move to specified position
+
+
+while True:
+    print_menu()
+    strInput = input()
+    if strInput == 'q':
+        raise SystemExit
