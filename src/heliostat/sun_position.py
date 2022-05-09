@@ -1,6 +1,7 @@
-# sunpos.py free to use from here: https://levelup.gitconnected.com/python-sun-position-for-solar-energy-and-research-7a4ead801777
+# sunpos.py free to use from here:
+# https://levelup.gitconnected.com/python-sun-position-for-solar-energy-and-research-7a4ead801777
 import math
-import datetime # for testing
+
 
 def sunpos(when, location, refraction):
     # Extract the passed data
@@ -61,24 +62,9 @@ def sunpos(when, location, refraction):
     # Return azimuth and elevation in degrees
     return (round(azimuth, 2), round(elevation, 2))
 
+
 def into_range(x, range_min, range_max):
     shiftedx = x - range_min
     delta = range_max - range_min
     return (((shiftedx % delta) + delta) % delta) + range_min
-
-# For testing
-if __name__ == "__main__":
-
-    location = (53.31851, -3.81203)
-    #
-    #when = (2022, 4, 28, 10, 38, 0, 1)
-    now = datetime.datetime.now(datetime.timezone.utc)
-    when = (now.year, now.month, now.day, now.hour, now.minute, now.second, 0)
-    # Get the Sun's apparent location in the sky
-    azimuth, elevation = sunpos(when, location, True)
-    # Output the results
-    print("\nWhen: ", when)
-    print("Where: ", location)
-    print("Azimuth: ", azimuth)
-    print("Elevation: ", elevation)
 

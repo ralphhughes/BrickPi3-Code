@@ -1,32 +1,35 @@
-import brickpi3, socket, datetime, time
+import brickpi3
+import datetime
+import socket
+import time
 
 from heliostat import motor_functions
 from heliostat.sun_position import sunpos
 
 MOTORS_ENABLED = True
 
+
 def get_target():
     # Prompt for target azimuth and inclination
-    strTargetAzimuth = input("Enter compass bearing to target in degrees")
-    if not strTargetAzimuth:
-        targetAzimuth = 0
+    str_target_azimuth = input("Enter compass bearing to target in degrees")
+    if not str_target_azimuth:
+        target_azimuth = 0
     else:
-        targetAzimuth = float(strTargetAzimuth)
+        target_azimuth = float(str_target_azimuth)
 
-    strTargetElevation = input("Enter elevation to target in degrees (leave blank for horizontal")
-    if not strTargetElevation:
-        targetElevation = 0
+    str_target_elevation = input("Enter elevation to target in degrees (leave blank for horizontal")
+    if not str_target_elevation:
+        target_elevation = 0
     else:
-        targetElevation = float(strTargetElevation)
-    return targetAzimuth, targetElevation
+        target_elevation = float(str_target_elevation)
+    return target_azimuth, target_elevation
 
 
 if __name__ == "__main__":
 
     print("Running on", socket.gethostname())
-
+    BP = brickpi3.BrickPi3()
     try:
-        BP = brickpi3.BrickPi3()
         BP.reset_all()
         INC_MOTOR = BP.PORT_A
         LIMIT_SWITCH = BP.PORT_3
@@ -90,7 +93,7 @@ if __name__ == "__main__":
                 # Float both motors
                 BP.set_motor_power(INC_MOTOR, -128)
                 BP.set_motor_power(AZI_MOTOR, -128)
-            time.sleep(60)
+            time.sleep(60 * 5)
 
     except KeyboardInterrupt:  # Stop the motors if user pressed Ctrl+C
         BP.reset_all()

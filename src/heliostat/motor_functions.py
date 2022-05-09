@@ -11,23 +11,18 @@ class Movement:
     AZI_SPEED = 200
     LIMIT_SWITCH = None
     BP = None
-    WHEEL_DIA = 43 # mm
-    BASE_DIA = 225 # mm
+    WHEEL_DIA = 43  # mm
+    BASE_DIA = 225  # mm
 
     def __init__(self, bp, inc_motor, azi_motor, limit_switch):
-        # print("class init")
         self.INC_MOTOR = inc_motor
         self.AZI_MOTOR = azi_motor
         self.LIMIT_SWITCH = limit_switch
         self.BP = bp
 
     def home_inclination_axis(self):
-        """
-
-        """
         self.BP.set_sensor_type(self.LIMIT_SWITCH, self.BP.SENSOR_TYPE.TOUCH)
         time.sleep(0.1)  # gives time for sensor to be configured
-
 
         self.BP.set_motor_power(self.INC_MOTOR, 20)     # Winch in at 20% power
         is_pressed = 0
@@ -41,7 +36,9 @@ class Movement:
 
         self.BP.set_motor_power(self.INC_MOTOR, 0)      # Stop the motor
         self.BP.reset_motor_encoder(self.INC_MOTOR)     # Set this position as "0" on the motors encoder
-        self.BP.set_motor_limits(self.INC_MOTOR, 0, self.INC_SPEED)     # Remove the power limit and set speed limit for future moves
+
+        # Remove the power limit and set speed limit for future moves
+        self.BP.set_motor_limits(self.INC_MOTOR, 0, self.INC_SPEED)
 
     def set_mirror_inclination(self, inc_angle):
         if -10 <= inc_angle <= 90:
@@ -57,21 +54,20 @@ class Movement:
         self.BP.set_motor_limits(self.AZI_MOTOR, 0, self.AZI_SPEED)
         motor_degrees_per_base_degree = (self.BASE_DIA / self.WHEEL_DIA)
 
-        # Outputs between -180 and + 180 depending whether CW or CCW is closer
+        # Outputs between -180 and + 180 depending on whether CW or CCW rotation would be quicker
         angle_to_move = ((((target_bearing - current_bearing) % 360) + 540) % 360) - 180
         # print(f'Azi_move:\t{current_bearing}\t->\t{angle_to_move}\t->\t{target_bearing}')
 
         # Sign of angle_to_move is flipped due to motor gearing
         self.BP.set_motor_position_relative(self.AZI_MOTOR, -angle_to_move * motor_degrees_per_base_degree)
 
-    def wait_for_motors_to_stop(self, timeout_seconds = 10):
+    def wait_for_motors_to_stop(self, timeout_seconds=10):
         """
         This function pauses (time.sleep) until the motors have stopped moving. This
         is useful for blocking execution until the motors have rotated to a specified
         angle.
 
-        Note: Includes timeouts, so only designed for use with turn_left\right,
-        rotate_left\right functions, move_forward or move_backward functions.
+        Note: Includes timeouts, as sometimes a motor may not move.
         """
         timeout_time_to_start = time.time() + 0.5
         while not self.is_moving():
@@ -87,4 +83,4 @@ class Movement:
                 break
 
     def is_moving(self):
-      return (self.BP.get_motor_status(self.INC_MOTOR)[3] != 0) or (self.BP.get_motor_status(self.AZI_MOTOR)[3] != 0)
+        return (self.BP.get_motor_status(self.INC_MOTOR)[3] != 0) or (self.BP.get_motor_status(self.AZI_MOTOR)[3] != 0)

@@ -1,8 +1,7 @@
 # Standalone test for using BrickPi to move\rotate a certain distance\angle
 
-import math
 import time
-from lib import robot_movement
+from robot_lawnmower import robot_movement
 import platform
 if platform.system() == 'Windows':
     from lib import brickpi3_mock
