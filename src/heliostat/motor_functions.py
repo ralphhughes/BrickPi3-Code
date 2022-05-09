@@ -44,16 +44,25 @@ class Movement:
         self.BP.set_motor_limits(self.INC_MOTOR, 0, self.INC_SPEED)     # Remove the power limit and set speed limit for future moves
 
     def set_mirror_inclination(self, inc_angle):
-        if 0 <= inc_angle < 90:
+        if -10 <= inc_angle <= 90:
             # 1500 degrees of motor is approx 90 degrees of mirror (50:3 reduction)
             motor_degrees = -(90-inc_angle) * (50/3)
+
+            # results of linear least squares regression based calibration
+            motor_degrees = (1.1526 * motor_degrees) + 13.1231
             self.BP.set_motor_position(self.INC_MOTOR, motor_degrees)
 
-    def set_mirror_azimuth(self, target_bearing):
+    def set_mirror_azimuth(self, current_bearing, target_bearing):
         #  1 degree of motor rotates the base (360/68.8)=5.23ish degrees
         self.BP.set_motor_limits(self.AZI_MOTOR, 0, self.AZI_SPEED)
         motor_degrees_per_base_degree = (self.BASE_DIA / self.WHEEL_DIA)
-        self.BP.set_motor_position(self.AZI_MOTOR, target_bearing * motor_degrees_per_base_degree)
+
+        # Outputs between -180 and + 180 depending whether CW or CCW is closer
+        angle_to_move = ((((target_bearing - current_bearing) % 360) + 540) % 360) - 180
+        # print(f'Azi_move:\t{current_bearing}\t->\t{angle_to_move}\t->\t{target_bearing}')
+
+        # Sign of angle_to_move is flipped due to motor gearing
+        self.BP.set_motor_position_relative(self.AZI_MOTOR, -angle_to_move * motor_degrees_per_base_degree)
 
     def wait_for_motors_to_stop(self, timeout_seconds = 10):
         """
