@@ -2,59 +2,59 @@ import brickpi3
 import datetime
 import socket
 import time
-
+from configparser import ConfigParser
 from heliostat import motor_functions
 from heliostat.sun_position import sunpos
 
 MOTORS_ENABLED = True
 
 
-def get_target():
-    # Prompt for target azimuth and inclination
-    str_target_azimuth = input("Enter compass bearing to target in degrees")
-    if not str_target_azimuth:
-        target_azimuth = 0
+def get_float_from_user(message, default_value):
+    str_user_input = input(message)
+    if not str_user_input:
+        my_float = default_value
     else:
-        target_azimuth = float(str_target_azimuth)
-
-    str_target_elevation = input("Enter elevation to target in degrees (leave blank for horizontal")
-    if not str_target_elevation:
-        target_elevation = 0
-    else:
-        target_elevation = float(str_target_elevation)
-    return target_azimuth, target_elevation
+        my_float = float(str_user_input)
+    return my_float
 
 
 if __name__ == "__main__":
 
     print("Running on", socket.gethostname())
     BP = brickpi3.BrickPi3()
+
+    config = ConfigParser()
+    config.read('heliostat.ini')
+    if not config.has_section('main'):
+        config.add_section("main")
+    if not config.has_option('main', 'last_moved'):
+        config.set('main', 'target_azimuth', '180.5')
+        config.set('main', "target_inclination", "42.0")
+        config.set('main', "mirror_azimuth", "0")
+        config.set('main', "last_moved", "None")
+
     try:
         BP.reset_all()
-        INC_MOTOR = BP.PORT_A
-        LIMIT_SWITCH = BP.PORT_3
-        AZI_MOTOR = BP.PORT_D
-        M = motor_functions.Movement(BP, INC_MOTOR, AZI_MOTOR, LIMIT_SWITCH)
+        M = motor_functions.Movement(BP)
 
         # Hardcoded location
         location = (53.31851, -3.81203)
 
         # Ask user for target direction
-        target_azimuth, target_inclination = get_target()
+        last_target_azimuth = config.get("main", "target_azimuth")
+        target_azimuth = get_float_from_user("Enter target azimuth (default is " + last_target_azimuth + ")", last_target_azimuth)
+
+        last_target_inclination = config.get("main", "target_inclination")
+        target_inclination = get_float_from_user("Enter target inclination (default is " + last_target_inclination + ")", last_target_inclination)
 
         # Home the elevation axis using the limit switch
         print("Homing inclination axis...")
         if MOTORS_ENABLED:
             M.home_inclination_axis()
 
-
         # Prompt for current azimuth
-        strAzimuth = input("Please enter current azimuth? (leave blank for due north)")
-        if not strAzimuth:
-            current_azimuth = 0
-        else:
-            current_azimuth = float(strAzimuth)
-
+        last_mirror_azimuth = config.get("main", "mirror_azimuth")
+        current_azimuth = get_float_from_user("Enter mirror azimuth default is (" + last_mirror_azimuth + ")", last_mirror_azimuth)
 
         while True:
             # Calculate azimuth & inclination of sun right now for the given lat/long
@@ -80,7 +80,6 @@ if __name__ == "__main__":
             print("Mirror Azimuth: ", mirror_azimuth)
             print("Mirror Inclination: ", mirror_inclination)
 
-
             # Instruct motors to move to specified position
             if MOTORS_ENABLED:
                 M.set_mirror_azimuth(current_azimuth, mirror_azimuth)
@@ -90,10 +89,18 @@ if __name__ == "__main__":
                 # We assume the mirror is at its destination now, so save the position for next time round the loop
                 current_azimuth = mirror_azimuth
 
+                # Serialise in case of power loss
+                config.set('main', 'mirror_azimuth', str(mirror_azimuth))
+                config.set('main', 'mirror_inclination', str(mirror_inclination))
+                config.set('main', 'target_azimuth', str(target_azimuth))
+                config.set('main', 'target_inclination', str(target_inclination))
+                config.set('main', 'last_moved', datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+                with open('heliostat.ini', 'w') as f:
+                    config.write(f)
+
                 # Float both motors
-                BP.set_motor_power(INC_MOTOR, -128)
-                BP.set_motor_power(AZI_MOTOR, -128)
-            time.sleep(60 * 5)
+                M.float_motors()
+            time.sleep(60)
 
     except KeyboardInterrupt:  # Stop the motors if user pressed Ctrl+C
         BP.reset_all()

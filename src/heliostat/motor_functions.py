@@ -4,21 +4,28 @@ import brickpi3
 
 
 class Movement:
-    # Constants for current robot
-    INC_MOTOR = None
-    INC_SPEED = 350
-    AZI_MOTOR = None
-    AZI_SPEED = 200
-    LIMIT_SWITCH = None
+    # These get overridden in init
     BP = None
+    INC_MOTOR = None
+    LIMIT_SWITCH = None
+    AZI_MOTOR = None
+
+    # Constants for current robot
+    INC_SPEED = 350  # degrees per second
+    AZI_SPEED = 200  # degrees per second
     WHEEL_DIA = 43  # mm
     BASE_DIA = 225  # mm
 
-    def __init__(self, bp, inc_motor, azi_motor, limit_switch):
-        self.INC_MOTOR = inc_motor
-        self.AZI_MOTOR = azi_motor
-        self.LIMIT_SWITCH = limit_switch
+    def __init__(self, bp):
         self.BP = bp
+        self.INC_MOTOR = bp.PORT_A
+        self.AZI_MOTOR = bp.PORT_D
+        self.LIMIT_SWITCH = bp.PORT_3
+
+    def float_motors(self):
+        self.BP.set_motor_power(self.INC_MOTOR, -128)
+        self.BP.set_motor_power(self.AZI_MOTOR, -128)
+
 
     def home_inclination_axis(self):
         self.BP.set_sensor_type(self.LIMIT_SWITCH, self.BP.SENSOR_TYPE.TOUCH)
@@ -43,7 +50,7 @@ class Movement:
     def set_mirror_inclination(self, inc_angle):
         if -10 <= inc_angle <= 90:
             # 1500 degrees of motor is approx 90 degrees of mirror (50:3 reduction)
-            motor_degrees = -(90-inc_angle) * (50/3)
+            motor_degrees = -inc_angle * (50/3)
 
             # results of linear least squares regression based calibration
             motor_degrees = (1.1526 * motor_degrees) + 13.1231

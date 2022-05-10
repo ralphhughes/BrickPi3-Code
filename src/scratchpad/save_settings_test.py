@@ -5,15 +5,18 @@ config = ConfigParser()
 # Reading from config
 
 config.read('config.ini')
+if not config.has_section('main'):
+    config.add_section('main')
+
 print("Reading last saved values:")
-print(config.get('main', 'time_last_run'))  # -> "value1"
-print(config.get('main', 'key2'))  # -> "value2"
-print(config.get('main', 'key3'))  # -> "value3"
+if config.has_option('main', 'time_last_run'):
+    print(config.get('main', 'time_last_run'))  # -> "value1"
+else:
+    print("first run?")
 
 # getfloat() raises an exception if the value is not a float
 # a_float = config.getfloat('main', 'a_float')
 
-# getint() and getboolean() also do this for their respective types
 # an_int = config.getint('main', 'an_int')
 input("press enter to save new values")
 ###########

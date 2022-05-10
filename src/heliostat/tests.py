@@ -64,8 +64,21 @@ if __name__ == "__main__":
         LIMIT_SWITCH = BP.PORT_3
         AZI_MOTOR = BP.PORT_D
         M = motor_functions.Movement(BP, INC_MOTOR, AZI_MOTOR, LIMIT_SWITCH)
-        # home_inc_motor()
-        test_azi_motor()
+
+        test_sunpos()
+
+        M.home_inclination_axis()
+        last_azi = 0
+        while True:
+            user_input=input("Enter azimuth, inclination angles separated by ',' or Ctrl+C to quit")
+            str_azi, str_inc = user_input.split(",")
+            azi = float(str_azi)
+            inc = float(str_inc)
+            M.set_mirror_azimuth(last_azi, azi)
+            last_azi = azi
+            M.set_mirror_inclination(inc)
+
+        # test_azi_motor()
         # azi_simulation()
 
         # Float both motors
