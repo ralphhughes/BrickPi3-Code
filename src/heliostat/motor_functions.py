@@ -7,8 +7,8 @@ class Movement:
     # These get overridden in init
     BP = None
     INC_MOTOR = None
-    LIMIT_SWITCH = None
     AZI_MOTOR = None
+    LIMIT_SWITCH = None
 
     # Constants for current robot
     INC_SPEED = 350  # degrees per second
@@ -25,7 +25,6 @@ class Movement:
     def float_motors(self):
         self.BP.set_motor_power(self.INC_MOTOR, -128)
         self.BP.set_motor_power(self.AZI_MOTOR, -128)
-
 
     def home_inclination_axis(self):
         self.BP.set_sensor_type(self.LIMIT_SWITCH, self.BP.SENSOR_TYPE.TOUCH)
@@ -47,7 +46,7 @@ class Movement:
         # Remove the power limit and set speed limit for future moves
         self.BP.set_motor_limits(self.INC_MOTOR, 0, self.INC_SPEED)
 
-    def set_mirror_inclination(self, inc_angle):
+    def set_mirror_inclination(self, inc_angle: float):
         if -10 <= inc_angle <= 90:
             # 1500 degrees of motor is approx 90 degrees of mirror (50:3 reduction)
             motor_degrees = -inc_angle * (50/3)
@@ -56,7 +55,7 @@ class Movement:
             motor_degrees = (1.1526 * motor_degrees) + 13.1231
             self.BP.set_motor_position(self.INC_MOTOR, motor_degrees)
 
-    def set_mirror_azimuth(self, current_bearing, target_bearing):
+    def set_mirror_azimuth(self, current_bearing: float, target_bearing: float):
         #  1 degree of motor rotates the base (360/68.8)=5.23ish degrees
         self.BP.set_motor_limits(self.AZI_MOTOR, 0, self.AZI_SPEED)
         motor_degrees_per_base_degree = (self.BASE_DIA / self.WHEEL_DIA)

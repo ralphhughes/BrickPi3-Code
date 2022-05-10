@@ -9,10 +9,10 @@ from heliostat.sun_position import sunpos
 MOTORS_ENABLED = True
 
 
-def get_float_from_user(message, default_value):
+def get_float_from_user(message: str, default_value: float) -> float:
     str_user_input = input(message)
     if not str_user_input:
-        my_float = default_value
+        my_float = float(default_value)
     else:
         my_float = float(str_user_input)
     return my_float
