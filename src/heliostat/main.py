@@ -1,3 +1,5 @@
+import math
+
 import brickpi3
 import datetime
 import socket
@@ -16,6 +18,20 @@ def get_float_from_user(message: str, default_value: float) -> float:
     else:
         my_float = float(str_user_input)
     return my_float
+
+
+def bisect_angles(theta1: float, theta2: float) -> float:
+    # Original method was apparently too simplistic?
+    theta = (theta1 + theta2) / 2
+
+    # New method: https://stackoverflow.com/questions/18070097/determining-the-average-angle
+    # x1 = math.sin(math.radians(theta1))
+    # y1 = math.cos(math.radians(theta1))
+    # x2 = math.sin(math.radians(theta2))
+    # y2 = math.cos(math.radians(theta2))
+    # theta = math.degrees(math.atan2(y1 + y2, x1 + x2))
+
+    return theta
 
 
 if __name__ == "__main__":
@@ -42,10 +58,10 @@ if __name__ == "__main__":
 
         # Ask user for target direction
         last_target_azimuth = config.get("main", "target_azimuth")
-        target_azimuth = get_float_from_user("Enter target azimuth (default is " + last_target_azimuth + ")", last_target_azimuth)
+        target_azimuth = get_float_from_user("Enter target azimuth (default is " + str(last_target_azimuth) + ")", last_target_azimuth)
 
         last_target_inclination = config.get("main", "target_inclination")
-        target_inclination = get_float_from_user("Enter target inclination (default is " + last_target_inclination + ")", last_target_inclination)
+        target_inclination = get_float_from_user("Enter target inclination (default is " + str(last_target_inclination) + ")", last_target_inclination)
 
         # Home the elevation axis using the limit switch
         print("Homing inclination axis...")
@@ -54,7 +70,7 @@ if __name__ == "__main__":
 
         # Prompt for current azimuth
         last_mirror_azimuth = config.get("main", "mirror_azimuth")
-        current_azimuth = get_float_from_user("Enter mirror azimuth default is (" + last_mirror_azimuth + ")", last_mirror_azimuth)
+        current_azimuth = get_float_from_user("Enter mirror azimuth default is (" + str(last_mirror_azimuth) + ")", last_mirror_azimuth)
 
         while True:
             # Calculate azimuth & inclination of sun right now for the given lat/long
@@ -64,8 +80,8 @@ if __name__ == "__main__":
             sun_azimuth, sun_inclination = sunpos(when, location, True)
 
             # Bisect the azimuth and inclination angle deltas to work out mirror azimuth and inclination
-            mirror_azimuth = (target_azimuth + sun_azimuth) / 2
-            mirror_inclination = (target_inclination + sun_inclination) / 2
+            mirror_azimuth = bisect_angles(target_azimuth, sun_azimuth)
+            mirror_inclination = bisect_angles(target_inclination, sun_inclination)
 
             # Print everything I've been given or calculated
             print("-" * 34)
@@ -81,7 +97,7 @@ if __name__ == "__main__":
             print("Mirror Inclination: ", mirror_inclination)
 
             # Instruct motors to move to specified position
-            if MOTORS_ENABLED:
+            if MOTORS_ENABLED and sun_inclination > 0:
                 M.set_mirror_azimuth(current_azimuth, mirror_azimuth)
                 M.set_mirror_inclination(mirror_inclination)
                 M.wait_for_motors_to_stop()
@@ -100,7 +116,7 @@ if __name__ == "__main__":
 
                 # Float both motors
                 M.float_motors()
-            time.sleep(60)
+            time.sleep(60 * 5)
 
     except KeyboardInterrupt:  # Stop the motors if user pressed Ctrl+C
         BP.reset_all()
