@@ -5,6 +5,7 @@ import socket
 import time
 
 from heliostat import motor_functions
+from heliostat.main import get_float_from_user, bisect_angles
 from heliostat.sun_position import sunpos
 
 
@@ -38,7 +39,7 @@ def home_inc_motor():
 
 def test_azi_motor():
     #  Test azimuth axis
-    BP.reset_motor_encoder(AZI_MOTOR)
+    # BP.reset_motor_encoder(AZI_MOTOR)
     M.set_mirror_azimuth(90, 315)
     M.wait_for_motors_to_stop()
     M.set_mirror_azimuth(315, 0)
@@ -52,6 +53,18 @@ def azi_simulation():
         angle_to_move = ((((target_angle - current_angle) % 360) + 540) % 360) - 180
         print(f'{current_angle}\t{target_angle}\t{angle_to_move}')
 
+def align_at_target():
+    last_azi = 0
+    while True:
+        user_input = input("Enter azimuth, inclination angles separated by ',' or Ctrl+C to quit")
+        str_azi, str_inc = user_input.split(",")
+        azi = float(str_azi)
+        inc = float(str_inc)
+        M.set_mirror_azimuth(last_azi, azi)
+        last_azi = azi
+        M.set_mirror_inclination(inc)
+
+
 
 if __name__ == "__main__":
 
@@ -59,30 +72,25 @@ if __name__ == "__main__":
 
     BP = brickpi3.BrickPi3()
     try:
-        BP.reset_all()
-        INC_MOTOR = BP.PORT_A
-        LIMIT_SWITCH = BP.PORT_3
-        AZI_MOTOR = BP.PORT_D
-        M = motor_functions.Movement(BP, INC_MOTOR, AZI_MOTOR, LIMIT_SWITCH)
+        #BP.reset_all()
+        M = motor_functions.Movement(BP)
 
-        test_sunpos()
+        # test_sunpos()
+        for i in range(1, 100):
+            theta1 = random.uniform(-180,180)
+            theta2 = random.uniform(-180,180)
+            theta = bisect_angles(theta1, theta2)
+            print(theta1, "\t", theta2, "\t", theta, "\t", (theta1 + theta2)/2)
 
-        M.home_inclination_axis()
-        last_azi = 0
-        while True:
-            user_input=input("Enter azimuth, inclination angles separated by ',' or Ctrl+C to quit")
-            str_azi, str_inc = user_input.split(",")
-            azi = float(str_azi)
-            inc = float(str_inc)
-            M.set_mirror_azimuth(last_azi, azi)
-            last_azi = azi
-            M.set_mirror_inclination(inc)
+
+        # M.home_inclination_axis()
 
         # test_azi_motor()
         # azi_simulation()
 
         # Float both motors
-        BP.set_motor_power(INC_MOTOR, -128)
-        BP.set_motor_power(AZI_MOTOR, -128)
+        #BP.set_motor_power(INC_MOTOR, -128)
+        #BP.set_motor_power(AZI_MOTOR, -128)
     except KeyboardInterrupt:  # Stop the motors if user pressed Ctrl+C
-        BP.reset_all()
+        print("done")
+        #BP.reset_all()
