@@ -18,7 +18,7 @@ NUM_STEPS_TURN = 10 # Number of keypresses between straight ahead and full left 
 LA_MOTOR_PORT = BP.PORT_B
 LA_LIMIT_SENSOR = BP.PORT_4
 
-LA_MIN_POS = 0
+LA_MIN_POS = 360
 LA_MAX_POS = 7500 # Degrees at full extension would in theory be 9360 but we lose some to the limit switch
 LA_SPEED_DPS = 400
 
@@ -95,14 +95,14 @@ def control_loop():
         la_pos = update_linear_actuator()
 
 
-        write_at(1, 1, f"Speed: {round(current_speed*100):.1f}%   ")
-        write_at(2, 1, f"Turn:  {round(current_turn*100):.1f}%   ")
-        write_at(3, 1, f"Left:  {left_motor_dps:.1f} dps   ")
-        write_at(4, 1, f"Right: {right_motor_dps:.1f} dps   ")
-        write_at(5, 1, f"LA pos: {int(la_pos):6d}   ")
-        write_at(6, 1, f"Target: {la_target}   ")
-        write_at(7, 1, f"Batt:  {BP.get_voltage_battery():5.3f} V   ")
-
+        write_at(3, 1, f"Speed: {round(current_speed*100):.1f}%   ")
+        write_at(4, 1, f"Turn:  {round(current_turn*100):.1f}%   ")
+        write_at(5, 1, f"Left:  {left_motor_dps:.1f} dps   ")
+        write_at(6, 1, f"Right: {right_motor_dps:.1f} dps   ")
+        write_at(7, 1, f"LA pos: {int(la_pos):6d}   ")
+        write_at(8, 1, f"Target: {la_target}   ")
+        write_at(9, 1, f"Batt:  {BP.get_voltage_battery():5.3f} V   ")
+        write_at(10, 1, f"LimitSwitch: {BP.get_sensor(LA_LIMIT_SENSOR)}  ")
 
         if abs(round(left_motor,1)) >= (1 / NUM_STEPS_SPEED):
             BP.set_motor_dps(BP.PORT_A, left_motor_dps)
@@ -132,7 +132,7 @@ def update_linear_actuator():
             BP.set_motor_power(LA_MOTOR_PORT, 0)
             BP.offset_motor_encoder(LA_MOTOR_PORT, la_pos)
             la_target = None
-        return la_pos
+            return la_pos
     except brickpi3.SensorError:
         pass
 
@@ -159,7 +159,6 @@ def update_linear_actuator():
             direction = 1 if error > 0 else -1
             BP.set_motor_dps(LA_MOTOR_PORT, direction * LA_SPEED_DPS)
 
-
     return la_pos
 
 def home_linear_actuator():
@@ -180,12 +179,21 @@ def home_linear_actuator():
         LA_MOTOR_PORT,
         BP.get_motor_encoder(LA_MOTOR_PORT)
     )
-    time.sleep(0.5)
+
 
     # Extend actuator slightly so as to release the limit switch
-    BP.set_motor_position(LA_MOTOR_PORT, 360)
-    time.sleep(2)
+    BP.set_motor_dps(LA_MOTOR_PORT, LA_SPEED_DPS)
+
+    while True:
+        try:
+            if BP.get_sensor(LA_LIMIT_SENSOR) == 0:
+                break
+        except brickpi3.SensorError:
+            pass
+
     BP.set_motor_power(LA_MOTOR_PORT, 0)
+
+
 
 def hide_cursor():
     sys.stdout.write("\033[?25l")
@@ -228,8 +236,8 @@ def main():
         BP.set_sensor_type(LA_LIMIT_SENSOR, BP.SENSOR_TYPE.TOUCH)
         home_linear_actuator()
 
-        print("\n" * 8)   # reserve 8 lines for status output
-        print("WASD keys to move, spacebar to stop all motors, E/R to extend/retract linear actuator, Q to quit.")
+        write_at(1,1,"WASD keys to move, spacebar to stop all motors, E/R to extend/retract linear actuator, Q to quit.")
+        print("\n" * 10)   # reserve lines for status output
 
         control_loop()
 
