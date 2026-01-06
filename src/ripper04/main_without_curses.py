@@ -1,5 +1,7 @@
 import sys,os
-import curses
+import termios
+import tty
+import select
 import math
 import brickpi3
 import time
@@ -49,52 +51,33 @@ def steering(x, y):
 
     return left, right
 
-def center_text(text, scr_width):
-    start_x = int((scr_width // 2) - (len(text) // 2) - len(text) % 2)
-    if start_x < 0:
-        start_x = 0
-    return start_x
-
-def control_loop(stdscr):
+def control_loop():
     global la_target
     k = 0
     current_turn = 0
     current_speed = 0
 
-    # Clear and refresh the screen for a blank canvas
-    stdscr.clear()
-    height, width = stdscr.getmaxyx()
-    stdscr.refresh()
-    stdscr.nodelay(True)
-    stdscr.timeout(50)   # 50 ms loop period (~20 Hz)
-
-    # Start colors in curses
-    curses.start_color()
-    curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
-
 
     # Loop where k is the last character pressed
-    while (k != ord('q')):
+    while (k != 'q'):
 
         # Which key was pressed
-        if k == curses.KEY_DOWN:
+        if k == 's':
             current_speed = current_speed - (1 / NUM_STEPS_SPEED)
-        elif k == curses.KEY_UP:
+        elif k == 'w':
             current_speed = current_speed + (1 / NUM_STEPS_SPEED)
-        elif k == curses.KEY_RIGHT:
+        elif k == 'd':
             current_turn = current_turn - (1 / NUM_STEPS_TURN)
-        elif k == curses.KEY_LEFT:
+        elif k == 'a':
             current_turn = current_turn + (1 / NUM_STEPS_TURN)
-        elif k == 32: # Spacebar
+        elif k == ' ': # Spacebar
             current_turn = 0
             current_speed = 0
             la_target = None
             BP.set_motor_power(LA_MOTOR_PORT, 0)
-        elif k == ord('e'):
+        elif k == 'e':
             la_target = LA_MAX_POS
-        elif k == ord('r'):
+        elif k == 'r':
             la_target = LA_MIN_POS
 
 
@@ -112,20 +95,14 @@ def control_loop(stdscr):
         la_pos = update_linear_actuator()
 
 
-        # Declaration of strings
-        title = "Motor Controller"[:width-1]
-        subtitle = "Arrow keys to move, spacebar to stop, e/r to extend/retract linear actuator."[:width-1]
-        #keystr = "Speed: {}%, Turn: {}%, LeftMotor: {:.1f}, RightMotor: {:.1f}"
-        #.format(round(current_speed * 100, 0), round(current_turn * 100, 0), left_motor_dps, right_motor_dps)
+        write_at(1, 1, f"Speed: {round(current_speed*100):.1f}%   ")
+        write_at(2, 1, f"Turn:  {round(current_turn*100):.1f}%   ")
+        write_at(3, 1, f"Left:  {left_motor_dps:.1f} dps   ")
+        write_at(4, 1, f"Right: {right_motor_dps:.1f} dps   ")
+        write_at(5, 1, f"LA pos: {int(la_pos):6d}   ")
+        write_at(6, 1, f"Target: {la_target}   ")
+        write_at(7, 1, f"Batt:  {BP.get_voltage_battery():5.3f} V   ")
 
-        keystr = (
-            f"Speed: {round(current_speed*100,0)}%, "
-            f"Turn: {round(current_turn*100,0)}%, "
-            f"LeftMotor: {left_motor_dps}%, "
-            f"RightMotor: {right_motor_dps}%, "
-            f"LA Pos: {int(la_pos)}"
-        )
-        statusbarstr = "Battery Voltage: {:.3f}".format(BP.get_voltage_battery())
 
         if abs(round(left_motor,1)) >= (1 / NUM_STEPS_SPEED):
             BP.set_motor_dps(BP.PORT_A, left_motor_dps)
@@ -138,43 +115,9 @@ def control_loop(stdscr):
             BP.set_motor_power(BP.PORT_D, 0)
 
 
-        # Centering calculations
-        start_x_title = center_text(title, width)
-        start_x_subtitle = center_text(subtitle, width)
-        start_x_keystr = center_text(keystr, width)
-        start_y = 0
-
-
-        # Render status bar
-        stdscr.attron(curses.color_pair(3))
-        stdscr.addstr(height-1, 0, statusbarstr)
-        stdscr.addstr(height-1, len(statusbarstr), " " * (width - len(statusbarstr) - 1))
-        stdscr.attroff(curses.color_pair(3))
-
-        # Turning on attributes for title
-        stdscr.attron(curses.color_pair(2))
-        stdscr.attron(curses.A_BOLD)
-
-        # Rendering title
-        stdscr.addstr(start_y, start_x_title, title)
-
-        # Turning off attributes for title
-        stdscr.attroff(curses.color_pair(2))
-        stdscr.attroff(curses.A_BOLD)
-
-        # Print rest of text
-        stdscr.addstr(start_y + 1, start_x_subtitle, subtitle)
-        stdscr.addstr(start_y + 3, (width // 2) - 2, '-' * 4)
-        stdscr.addstr(start_y + 5, start_x_keystr, keystr)
-
-
-
-        # Refresh the screen
-        stdscr.noutrefresh()
-        curses.doupdate()
 
         # Check if any key pressed
-        k = stdscr.getch()
+        k = read_key()
 
 
 def update_linear_actuator():
@@ -244,18 +187,63 @@ def home_linear_actuator():
     time.sleep(2)
     BP.set_motor_power(LA_MOTOR_PORT, 0)
 
+def hide_cursor():
+    sys.stdout.write("\033[?25l")
+    sys.stdout.flush()
+
+def show_cursor():
+    sys.stdout.write("\033[?25h")
+    sys.stdout.flush()
+
+def write_at(row, col, text):
+    sys.stdout.write(f"\033[{row};{col}H{text}")
+    sys.stdout.flush()
+
+def get_key():
+    if select.select([sys.stdin], [], [], 0)[0]:
+        return sys.stdin.read(1)
+    return None
+
+def read_key():
+    c = get_key()
+    if c is None:
+        return None
+
+    if c == '\x1b':  # escape
+        if get_key() == '[':
+            return get_key()  # A, B, C, D etc
+        return None
+
+    return c
+
+
 def main():
     try:
+        stdin_fd = sys.stdin.fileno()
+        old_term_settings = termios.tcgetattr(stdin_fd)
+        tty.setcbreak(stdin_fd)
+        hide_cursor()
+        print(chr(27) + "[2J") # Clear screen
+
         BP.set_sensor_type(LA_LIMIT_SENSOR, BP.SENSOR_TYPE.TOUCH)
         home_linear_actuator()
 
-        curses.wrapper(control_loop)
+        print("\n" * 8)   # reserve 8 lines for status output
+        print("WASD keys to move, spacebar to stop all motors, E/R to extend/retract linear actuator, Q to quit.")
+
+        control_loop()
+
         BP.set_motor_power(BP.PORT_A, -128)
         BP.set_motor_power(BP.PORT_D, -128)
     except KeyboardInterrupt:
         BP.reset_all()
     finally:
         BP.reset_all()
+        termios.tcsetattr(stdin_fd, termios.TCSADRAIN, old_term_settings)
+        show_cursor()
+        sys.stdout.flush()
+        print()   # move cursor to clean line
+
 
 if __name__ == "__main__":
     main()
